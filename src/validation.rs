@@ -7,7 +7,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::InitDataError;
-use crate::types::InitData;
+use crate::model::InitData;
 use crate::{parse, sign};
 
 /// Default expiration time for init data in seconds (24 hours)

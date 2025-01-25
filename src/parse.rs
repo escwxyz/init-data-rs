@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use url::form_urlencoded;
 
 use crate::error::InitDataError;
-use crate::types::InitData;
+use crate::model::InitData;
 
 const STRING_PROPS: [&str; 1] = ["start_param"];
 
@@ -13,14 +13,12 @@ pub fn parse(init_data: &str) -> Result<InitData, InitDataError> {
         return Err(InitDataError::UnexpectedFormat("init_data is empty".to_string()));
     }
 
-    // Validate that the input is a valid query string
     if init_data.contains(';') || !init_data.contains('=') {
         return Err(InitDataError::UnexpectedFormat(
             "Invalid query string format".to_string(),
         ));
     }
 
-    // Parse the query string
     let pairs = form_urlencoded::parse(init_data.as_bytes());
     let mut params: BTreeMap<String, String> = BTreeMap::new();
 
@@ -28,12 +26,9 @@ pub fn parse(init_data: &str) -> Result<InitData, InitDataError> {
         params.insert(key.to_string(), value.into_owned());
     }
 
-    // Build JSON object from params
     let json_pairs: Vec<String> = params
         .iter()
         .map(|(k, v)| {
-            // If passed value is valid in the context of JSON and not a string prop,
-            // we could insert this value without formatting
             if !STRING_PROPS.contains(&k.as_str()) && serde_json::from_str::<Value>(v).is_ok() {
                 format!("\"{}\":{}", k, v)
             } else {
@@ -50,7 +45,7 @@ pub fn parse(init_data: &str) -> Result<InitData, InitDataError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::ChatType;
+    use crate::model::ChatType;
 
     const PARSE_TEST_INIT_DATA: &str = "query_id=AAHdF6IQAAAAAN0XohDhrOrc&user=%7B%22id%22%3A279058397%2C%22first_name%22%3A%22Vladislav%22%2C%22last_name%22%3A%22Kibenko%22%2C%22username%22%3A%22vdkfrost%22%2C%22language_code%22%3A%22ru%22%2C%22is_premium%22%3Atrue%7D&auth_date=1662771648&hash=c501b71e775f74ce10e377dea85a7ea24ecd640b223ea86dfe453e0eaed2e2b2&start_param=abc";
 
