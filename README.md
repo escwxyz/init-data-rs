@@ -23,7 +23,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-init-data-rs = "0.1.0"
+init-data-rs = "0.1.1"
 ```
 
 ## Usage
