@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Access parsed data
     if let Some(user) = data.user {
-        println!("User ID: {}", user.id.0);
+        println!("User ID: {}", user.id);
     }
 
     Ok(())
