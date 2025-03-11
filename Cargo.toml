@@ -13,7 +13,7 @@ categories = ["authentication", "parser-implementations", "web-programming"]
 
 [dependencies]
 serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.138"
+serde_json = "1.0.140"
 sha2 = "0.10.8"
 hex = "0.4.3"
 url = "2.5.4"
