@@ -1,6 +1,6 @@
-use serde_with::DisplayFromStr;
-use serde_with::serde_as;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
+use serde_with::DisplayFromStr;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -50,5 +50,5 @@ pub struct InitData {
     pub receiver: Option<User>,
     pub start_param: Option<String>,
     pub user: Option<User>,
-    pub signature: String
+    pub signature: String,
 }

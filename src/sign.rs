@@ -1,6 +1,6 @@
-use sha2::{Sha256};
-use std::collections::BTreeMap;
 use hmac::{Hmac, KeyInit, Mac};
+use sha2::Sha256;
+use std::collections::BTreeMap;
 use url::form_urlencoded;
 
 use crate::error::InitDataError;
@@ -31,14 +31,10 @@ pub fn sign(init_data: &str, token: &str) -> Result<String, InitDataError> {
 
     let secret_key = hmac.finalize();
 
-    let mut hmac:Hmac<Sha256> = hmac::Hmac::new_from_slice(secret_key.as_bytes()).unwrap();
+    let mut hmac: Hmac<Sha256> = hmac::Hmac::new_from_slice(secret_key.as_bytes()).unwrap();
     hmac.update(data_check_string.as_bytes());
 
-    Ok(
-        hex::encode(
-            hmac.finalize().as_bytes()
-        )
-    )
+    Ok(hex::encode(hmac.finalize().as_bytes()))
 }
 
 #[cfg(test)]

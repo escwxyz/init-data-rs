@@ -39,12 +39,12 @@ pub fn parse(init_data: &str) -> Result<InitData, InitDataError> {
 
     let json_str = format!("{{{}}}", json_pairs.join(","));
 
-    println!("{}",json_str);
+    println!("{}", json_str);
 
-    let result = serde_json::from_str::<InitData>(&json_str)
-        .map_err(|err| InitDataError::UnexpectedFormat(err.to_string()))?;
+    let result =
+        serde_json::from_str::<InitData>(&json_str).map_err(|err| InitDataError::UnexpectedFormat(err.to_string()))?;
 
-    println!("{:?}",result);
+    println!("{:?}", result);
 
     Ok(result)
 }
