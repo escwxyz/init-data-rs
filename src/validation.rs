@@ -71,6 +71,9 @@ pub fn validate(init_data: &str, token: &str, expires_in: Option<u64>) -> Result
     let (base_data, hash) = extract_hash(init_data)?;
     let expected_hash = sign(&base_data, token)?;
 
+    println!("expected : {}", expected_hash);
+    println!("real : {}", hash);
+
     if hash != expected_hash {
         return Err(InitDataError::HashInvalid);
     }
@@ -141,15 +144,11 @@ pub fn validate_third_party(
 mod tests {
     use super::*;
 
-    const BOT_TOKEN: &str = "12345:YOUR_BOT_TOKEN";
-    const THIRD_PARTY_BOT_TOKEN: &str = "54321:OTHER_BOT_TOKEN";
+    const BOT_TOKEN: &str = "7632428821:AAFqenWH5Dfre0z542i0xKsslDXGrjwBjPk";
+    const THIRD_PARTY_BOT_TOKEN: &str = "7632428821:AAEOhSTay1M3CvTFevpphjdSimajetvblyk";
     const INVALID_HASH: &str = "0000000000000000000000000000000000000000000000000000000000000000"; // 64 chars
 
-    const VALID_INIT_DATA: &str = "query_id=AAHdF6IQAAAAAN0XohDhrOrc\
-        &user=%7B%22id%22%3A279058397%2C%22first_name%22%3A%22Vladislav%22%2C\
-        %22last_name%22%3A%22Kibenko%22%2C%22username%22%3A%22vdkfrost%22%2C\
-        %22language_code%22%3A%22ru%22%2C%22is_premium%22%3Atrue%7D\
-        &auth_date=1662771648";
+    const VALID_INIT_DATA: &str = "user=%7B%22id%22%3A6601562775%2C%22first_name%22%3A%22%29%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22trogloditik%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FqABgrvbhV8g_iUjd_pSUuX1bBuXefFmspMjb57gedoGAKDPx5fxwEMIF8k62mWhS.svg%22%7D&chat_instance=-8599080687359297588&chat_type=sender&auth_date=1748683232&signature=5rhZg9sshLtKrdTSwGvXA60MRmqtfU0RPTmUIAdcOEAm2n1XRfQhf0hvQNZo9Nwx4G3Kk92RSelu_CrPzra7Aw&hash=c8fdc0e1608154171a77ef4ce838d114b0229d891ee55ac1ee566f14551433e8";
 
     fn create_valid_init_data(init_data: &str, token: &str) -> String {
         let hash = sign(init_data, token).unwrap();
@@ -220,16 +219,16 @@ mod tests {
         assert!(result.is_ok());
 
         let data = result.unwrap();
-        assert_eq!(data.auth_date, 1662771648);
+        assert_eq!(data.auth_date, 1748683232);
         assert!(data.user.is_some());
 
         if let Some(user) = data.user {
-            assert_eq!(user.id, 279058397);
-            assert_eq!(user.first_name, "Vladislav");
-            assert_eq!(user.last_name, Some("Kibenko".to_string()));
-            assert_eq!(user.username, Some("vdkfrost".to_string()));
-            assert_eq!(user.language_code, Some("ru".to_string()));
-            assert_eq!(user.is_premium, Some(true));
+            assert_eq!(user.id, 6601562775);
+            assert_eq!(user.first_name, ")");
+            assert_eq!(user.last_name, Some("".to_string()));
+            assert_eq!(user.username, Some("trogloditik".to_string()));
+            assert_eq!(user.language_code, Some("en".to_string()));
+            assert_eq!(user.is_premium, None);
         }
         println!("\n=== End: Testing validate valid data ===\n");
     }

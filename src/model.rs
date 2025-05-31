@@ -1,3 +1,5 @@
+use serde_with::DisplayFromStr;
+use serde_with::serde_as;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -34,17 +36,19 @@ pub struct Chat {
     pub username: Option<String>,
 }
 
+#[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InitData {
     pub auth_date: u64,
     pub can_send_after: Option<u32>,
     pub chat: Option<Chat>,
     pub chat_type: Option<ChatType>,
-    pub chat_instance: Option<String>,
+    pub chat_instance: Option<i64>,
     pub data: Option<String>,
     pub hash: String,
     pub query_id: Option<String>,
     pub receiver: Option<User>,
     pub start_param: Option<String>,
     pub user: Option<User>,
+    pub signature: String
 }

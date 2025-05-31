@@ -39,7 +39,14 @@ pub fn parse(init_data: &str) -> Result<InitData, InitDataError> {
 
     let json_str = format!("{{{}}}", json_pairs.join(","));
 
-    serde_json::from_str(&json_str).map_err(|e| InitDataError::UnexpectedFormat(e.to_string()))
+    println!("{}",json_str);
+
+    let result = serde_json::from_str::<InitData>(&json_str)
+        .map_err(|err| InitDataError::UnexpectedFormat(err.to_string()))?;
+
+    println!("{:?}",result);
+
+    Ok(result)
 }
 
 #[cfg(test)]
@@ -47,7 +54,7 @@ mod tests {
     use super::*;
     use crate::model::ChatType;
 
-    const PARSE_TEST_INIT_DATA: &str = "query_id=AAHdF6IQAAAAAN0XohDhrOrc&user=%7B%22id%22%3A279058397%2C%22first_name%22%3A%22Vladislav%22%2C%22last_name%22%3A%22Kibenko%22%2C%22username%22%3A%22vdkfrost%22%2C%22language_code%22%3A%22ru%22%2C%22is_premium%22%3Atrue%7D&auth_date=1662771648&hash=c501b71e775f74ce10e377dea85a7ea24ecd640b223ea86dfe453e0eaed2e2b2&start_param=abc";
+    const PARSE_TEST_INIT_DATA: &str = "user=%7B%22id%22%3A6601562775%2C%22first_name%22%3A%22%29%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22trogloditik%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FqABgrvbhV8g_iUjd_pSUuX1bBuXefFmspMjb57gedoGAKDPx5fxwEMIF8k62mWhS.svg%22%7D&chat_instance=-8599080687359297588&chat_type=sender&auth_date=1748683232&signature=5rhZg9sshLtKrdTSwGvXA60MRmqtfU0RPTmUIAdcOEAm2n1XRfQhf0hvQNZo9Nwx4G3Kk92RSelu_CrPzra7Aw&hash=c8fdc0e1608154171a77ef4ce838d114b0229d891ee55ac1ee566f14551433e8";
 
     #[test]
     fn test_parse_invalid_format() {
@@ -62,21 +69,21 @@ mod tests {
     fn test_parse_valid_data() {
         let result = parse(PARSE_TEST_INIT_DATA).unwrap();
 
-        assert_eq!(result.query_id, Some("AAHdF6IQAAAAAN0XohDhrOrc".to_string()));
-        assert_eq!(result.auth_date, 1662771648);
-        assert_eq!(result.start_param, Some("abc".to_string()));
+        assert_eq!(result.query_id, None);
+        assert_eq!(result.auth_date, 1748683232);
+        assert_eq!(result.start_param, None);
         assert_eq!(
             result.hash,
-            "c501b71e775f74ce10e377dea85a7ea24ecd640b223ea86dfe453e0eaed2e2b2"
+            "c8fdc0e1608154171a77ef4ce838d114b0229d891ee55ac1ee566f14551433e8"
         );
 
         if let Some(user) = result.user {
-            assert_eq!(user.id, 279058397);
-            assert_eq!(user.first_name, "Vladislav");
-            assert_eq!(user.last_name, Some("Kibenko".to_string()));
-            assert_eq!(user.username, Some("vdkfrost".to_string()));
-            assert_eq!(user.language_code, Some("ru".to_string()));
-            assert_eq!(user.is_premium, Some(true));
+            assert_eq!(user.id, 6601562775);
+            assert_eq!(user.first_name, ")");
+            assert_eq!(user.last_name, Some("".to_string()));
+            assert_eq!(user.username, Some("trogloditik".to_string()));
+            assert_eq!(user.language_code, Some("en".to_string()));
+            assert_eq!(user.is_premium, None);
         } else {
             panic!("User should be present");
         }
@@ -90,7 +97,7 @@ mod tests {
 
     #[test]
     fn test_parse_with_chat() {
-        let init_data = "chat=%7B%22id%22%3A-100123456789%2C%22type%22%3A%22supergroup%22%2C%22title%22%3A%22Test%20Group%22%7D&auth_date=1662771648&hash=abc";
+        let init_data = "chat=%7B%22id%22%3A-100123456789%2C%22type%22%3A%22supergroup%22%2C%22title%22%3A%22Test%20Group%22%7D&auth_date=1662771648&signature=abc&hash=abc";
         let result = parse(init_data).unwrap();
 
         if let Some(chat) = result.chat {
@@ -104,7 +111,7 @@ mod tests {
 
     #[test]
     fn test_parse_start_param() {
-        let init_data = "start_param=test123&auth_date=1662771648&hash=abc";
+        let init_data = "start_param=test123&auth_date=1662771648&signature=abc&hash=abc";
         let result = parse(init_data).unwrap();
         assert_eq!(result.start_param, Some("test123".to_string()));
     }
