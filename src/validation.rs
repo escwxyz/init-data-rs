@@ -71,9 +71,6 @@ pub fn validate(init_data: &str, token: &str, expires_in: Option<u64>) -> Result
     let (base_data, hash) = extract_hash(init_data)?;
     let expected_hash = sign(&base_data, token)?;
 
-    println!("expected : {}", expected_hash);
-    println!("real : {}", hash);
-
     if hash != expected_hash {
         return Err(InitDataError::HashInvalid);
     }
