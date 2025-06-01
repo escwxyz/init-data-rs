@@ -26,12 +26,16 @@ pub fn sign(init_data: &str, token: &str) -> Result<String, InitDataError> {
         .collect::<Vec<_>>()
         .join("\n");
 
-    let mut hmac: Hmac<Sha256> = hmac::Hmac::new_from_slice("WebAppData".as_bytes()).unwrap();
+    // More : https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
+    let mut hmac: Hmac<Sha256> = hmac::Hmac::new_from_slice("WebAppData".as_bytes())
+        .map_err(|error| InitDataError::Internal(error.to_string()))?;
+
     hmac.update(token.as_bytes());
 
     let secret_key = hmac.finalize();
 
-    let mut hmac: Hmac<Sha256> = hmac::Hmac::new_from_slice(secret_key.as_bytes()).unwrap();
+    let mut hmac: Hmac<Sha256> = hmac::Hmac::new_from_slice(secret_key.as_bytes())
+        .map_err(|error| InitDataError::Internal(error.to_string()))?;
     hmac.update(data_check_string.as_bytes());
 
     Ok(hex::encode(hmac.finalize().as_bytes()))
