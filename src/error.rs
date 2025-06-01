@@ -16,4 +16,7 @@ pub enum InitDataError {
 
     #[error("init data is expired")]
     Expired,
+
+    #[error("internal library's error occurred: {0}")]
+    Internal(String),
 }
