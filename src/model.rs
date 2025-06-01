@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
