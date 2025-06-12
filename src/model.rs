@@ -40,11 +40,12 @@ pub struct InitData {
     pub can_send_after: Option<u32>,
     pub chat: Option<Chat>,
     pub chat_type: Option<ChatType>,
-    pub chat_instance: Option<String>,
+    pub chat_instance: Option<i64>,
     pub data: Option<String>,
     pub hash: String,
     pub query_id: Option<String>,
     pub receiver: Option<User>,
     pub start_param: Option<String>,
     pub user: Option<User>,
+    pub signature: String,
 }

@@ -1,4 +1,5 @@
-use sha2::{Digest, Sha256};
+use hmac::{Hmac, KeyInit, Mac};
+use sha2::Sha256;
 use std::collections::BTreeMap;
 use url::form_urlencoded;
 
@@ -25,12 +26,19 @@ pub fn sign(init_data: &str, token: &str) -> Result<String, InitDataError> {
         .collect::<Vec<_>>()
         .join("\n");
 
-    let secret_key = Sha256::digest(token.as_bytes());
-    let mut hmac = Sha256::new();
-    hmac.update(data_check_string.as_bytes());
-    hmac.update(secret_key);
+    // More : https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
+    let mut hmac: Hmac<Sha256> = hmac::Hmac::new_from_slice("WebAppData".as_bytes())
+        .map_err(|error| InitDataError::Internal(error.to_string()))?;
 
-    Ok(hex::encode(hmac.finalize()))
+    hmac.update(token.as_bytes());
+
+    let secret_key = hmac.finalize();
+
+    let mut hmac: Hmac<Sha256> = hmac::Hmac::new_from_slice(secret_key.as_bytes())
+        .map_err(|error| InitDataError::Internal(error.to_string()))?;
+    hmac.update(data_check_string.as_bytes());
+
+    Ok(hex::encode(hmac.finalize().as_bytes()))
 }
 
 #[cfg(test)]
