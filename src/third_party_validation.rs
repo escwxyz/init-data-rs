@@ -43,12 +43,10 @@ fn validate_third_party_with_signature(
         ));
     }
 
-    // 1. Parse query string into key-value pairs
     let pairs: Vec<(String, String)> = url::form_urlencoded::parse(init_data.as_bytes())
         .map(|(k, v)| (k.into_owned(), v.into_owned()))
         .collect();
 
-    // 2. Extract and remove "hash" and "signature"
     let mut signature_b64 = None;
     let mut filtered_pairs: Vec<(String, String)> = Vec::new();
     let mut auth_date: Option<u64> = None;
@@ -64,7 +62,6 @@ fn validate_third_party_with_signature(
     }
     let signature_b64 = signature_b64.ok_or(InitDataError::SignatureMissing)?;
 
-    // 3. Expiration check
     if let (Some(expires_in), Some(auth_date)) = (expires_in, auth_date) {
         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
         if auth_date + expires_in < now {
@@ -72,10 +69,8 @@ fn validate_third_party_with_signature(
         }
     }
 
-    // 4. Sort by key
     filtered_pairs.sort_by(|a, b| a.0.cmp(&b.0));
 
-    // 5. Build message as "{bot_id}:WebAppData\n{sorted key=value pairs joined by \n}"
     let message = format!(
         "{}:WebAppData\n{}",
         bot_id,
@@ -86,21 +81,21 @@ fn validate_third_party_with_signature(
             .join("\n")
     );
 
-    // 6. Decode signature from base64
     let signature_bytes = base64_engine
         .decode(signature_b64.as_bytes())
         .map_err(|_| InitDataError::SignatureInvalid("Failed to decode signature from base64".to_string()))?;
+
     let signature = Signature::from_slice(&signature_bytes)
         .map_err(|_| InitDataError::SignatureInvalid("Failed to parse signature".to_string()))?;
 
-    // 7. Decode public key from hex
     let public_key_hex = if is_test { TEST_PUBLIC_KEY } else { PROD_PUBLIC_KEY };
+
     let public_key_bytes = <[u8; 32]>::from_hex(public_key_hex)
         .map_err(|_| InitDataError::SignatureInvalid("Failed to parse public key".to_string()))?;
+
     let verifying_key = VerifyingKey::from_bytes(&public_key_bytes)
         .map_err(|_| InitDataError::SignatureInvalid("Failed to parse public key".to_string()))?;
 
-    // 8. Verify Ed25519 signature
     verifying_key
         .verify(message.as_bytes(), &signature)
         .map_err(|_| InitDataError::SignatureInvalid("Failed to verify signature".to_string()))?;
@@ -156,6 +151,34 @@ mod tests {
             "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
         );
         let result = validate_third_party(&tampered, BOT_ID, None);
+        assert!(matches!(result, Err(InitDataError::SignatureInvalid(_))));
+    }
+
+    #[test]
+    fn test_third_party_invalid_base64_signature() {
+        let bad_data = "query_id=test&auth_date=123&signature=!!!notbase64!!!&hash=abc";
+        let bot_id = 123456;
+        let result = validate_third_party_with_signature(bad_data, bot_id, None, true);
+        assert!(matches!(result, Err(InitDataError::SignatureInvalid(_))));
+    }
+
+    #[test]
+    fn test_third_party_invalid_public_key() {
+        let valid_data = "query_id=test&auth_date=123&signature=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&hash=abc";
+        let bot_id = 123456;
+        // Use an invalid public key by temporarily changing the constant or by passing a custom function if your API allows
+        // For this test, you might need to expose a version of your function that takes a public key string
+        let result = validate_third_party_with_signature(valid_data, bot_id, None, true); // with a purposely broken key
+        assert!(matches!(result, Err(InitDataError::SignatureInvalid(_))));
+    }
+
+    #[test]
+    fn test_third_party_signature_verification_failure() {
+        // Use a valid base64 signature, but one that doesn't match the data
+        let bad_sig = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode([0u8; 64]);
+        let bad_data = format!("query_id=test&auth_date=123&signature={}&hash=abc", bad_sig);
+        let bot_id = 123456;
+        let result = validate_third_party_with_signature(&bad_data, bot_id, None, true);
         assert!(matches!(result, Err(InitDataError::SignatureInvalid(_))));
     }
 

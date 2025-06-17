@@ -11,6 +11,10 @@ pub fn sign(init_data: &str, token: &str) -> Result<String, InitDataError> {
         return Err(InitDataError::UnexpectedFormat("init_data is empty".to_string()));
     }
 
+    if token.is_empty() {
+        return Err(InitDataError::UnexpectedFormat("token is empty".to_string()));
+    }
+
     let pairs = form_urlencoded::parse(init_data.as_bytes());
     let mut params: BTreeMap<String, String> = BTreeMap::new();
 
@@ -27,6 +31,7 @@ pub fn sign(init_data: &str, token: &str) -> Result<String, InitDataError> {
         .join("\n");
 
     // More : https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
+
     let mut hmac: Hmac<Sha256> = hmac::Hmac::new_from_slice("WebAppData".as_bytes())
         .map_err(|error| InitDataError::Internal(error.to_string()))?;
 
@@ -36,6 +41,7 @@ pub fn sign(init_data: &str, token: &str) -> Result<String, InitDataError> {
 
     let mut hmac: Hmac<Sha256> = hmac::Hmac::new_from_slice(secret_key.as_bytes())
         .map_err(|error| InitDataError::Internal(error.to_string()))?;
+
     hmac.update(data_check_string.as_bytes());
 
     Ok(hex::encode(hmac.finalize().as_bytes()))
@@ -50,6 +56,13 @@ mod tests {
     #[test]
     fn test_sign_empty_data() {
         let result = sign("", BOT_TOKEN);
+        assert!(matches!(result, Err(InitDataError::UnexpectedFormat(_))));
+    }
+
+    #[test]
+    fn test_sign_empty_token() {
+        let base_data = "query_id=test&auth_date=123";
+        let result = sign(base_data, "");
         assert!(matches!(result, Err(InitDataError::UnexpectedFormat(_))));
     }
 

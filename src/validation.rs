@@ -116,7 +116,9 @@ mod tests {
 
     #[test]
     fn test_validate_missing_hash() {
-        let result = validate("query_id=test123", BOT_TOKEN, None);
+        let data = "query_id=test&auth_date=123";
+        let token = "valid:token";
+        let result = validate(data, token, None);
         assert!(matches!(result, Err(InitDataError::HashMissing)));
     }
 
@@ -255,6 +257,16 @@ mod tests {
 
         // Test invalid hash format
         let result = extract_hash("query_id=test123&hash=invalid");
+        assert!(matches!(result, Err(InitDataError::HashInvalid)));
+    }
+
+    #[test]
+    fn test_validate_incorrect_hash() {
+        let base_data = "query_id=AAHdF6IQAAAAAN0XohDhrOrc&user=%7B%22id%22%3A279058397%2C%22first_name%22%3A%22Vladislav%22%2C%22last_name%22%3A%22Kibenko%22%2C%22username%22%3A%22vdkfrost%22%2C%22language_code%22%3A%22ru%22%2C%22is_premium%22%3Atrue%7D&auth_date=1662771648";
+        // Use an obviously invalid hash (all zeros)
+        let invalid_hash = "0000000000000000000000000000000000000000000000000000000000000000";
+        let init_data = format!("{}&hash={}", base_data, invalid_hash);
+        let result = validate(&init_data, BOT_TOKEN, None);
         assert!(matches!(result, Err(InitDataError::HashInvalid)));
     }
 }
