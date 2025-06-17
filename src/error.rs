@@ -19,4 +19,10 @@ pub enum InitDataError {
 
     #[error("internal library's error occurred: {0}")]
     Internal(String),
+
+    #[error("signature is missing")]
+    SignatureMissing,
+
+    #[error("signature is invalid: {0}")]
+    SignatureInvalid(String),
 }

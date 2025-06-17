@@ -23,7 +23,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-init-data-rs = "0.1.1"
+init-data-rs = "0.1.2"
 ```
 
 ## Usage
@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```rust
 use init_data_rs::validate_third_party;
 
-let data = validate_third_party(init_data, bot_token, third_party_token, None)?;
+let data = validate_third_party(init_data, bot_id, None)?;
 ```
 
 ## Documentation
