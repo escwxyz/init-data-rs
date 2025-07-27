@@ -6,9 +6,9 @@ use url::form_urlencoded;
 use crate::error::InitDataError;
 
 /// Sign creates hash for init data using bot token.
-/// 
+///
 /// # Errors
-/// 
+///
 /// See `init_data_rs::parse` for possible errors
 pub fn sign(init_data: &str, token: &str) -> Result<String, InitDataError> {
     if init_data.is_empty() {
