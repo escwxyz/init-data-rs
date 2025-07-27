@@ -1,3 +1,7 @@
+#![warn(clippy::pedantic)]
+// We ignore this warning because the only literals we use
+// are telegram ids, which are not meant to be read
+#![allow(clippy::unreadable_literal)]
 mod error;
 mod model;
 mod parse;

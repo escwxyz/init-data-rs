@@ -61,6 +61,15 @@ fn extract_hash(init_data: &str) -> Result<(String, String), InitDataError> {
 /// let init_data = "query_id=123&auth_date=1662771648&hash=...";
 /// let result = validate(init_data, "BOT_TOKEN", None);
 /// ```
+///
+/// # Errors
+///
+/// See `init_data_rs::parse` for possible errors
+///
+/// # Panics
+///
+/// This function panics if `SystemTime::now` returns a date less than `UNIX_EPOCH`.
+/// Meaning the function should panic only if the device time is really, REALLY bad.
 pub fn validate(init_data: &str, token: &str, expires_in: Option<u64>) -> Result<InitData, InitDataError> {
     if init_data.is_empty() || !init_data.contains('=') {
         return Err(InitDataError::UnexpectedFormat(
@@ -135,7 +144,7 @@ mod tests {
             );
 
         let hash = sign(&base_data, BOT_TOKEN).unwrap();
-        let init_data = format!("{}&hash={}", base_data, hash);
+        let init_data = format!("{base_data}&hash={hash}");
         let result = validate(&init_data, BOT_TOKEN, Some(86400));
         assert!(matches!(result, Err(InitDataError::Expired)));
     }
@@ -150,9 +159,9 @@ mod tests {
             );
 
         let hash = sign(&base_data, BOT_TOKEN).unwrap();
-        let init_data = format!("{}&hash={}", base_data, hash);
+        let init_data = format!("{base_data}&hash={hash}");
         let result = validate(&init_data, BOT_TOKEN, Some(0));
-        println!("result: {:?}", result);
+        println!("result: {result:?}");
 
         assert!(result.is_ok());
     }
@@ -189,7 +198,7 @@ mod tests {
         assert!(matches!(result, Err(InitDataError::HashInvalid)));
 
         // Test hash that's too long
-        let result = validate(&format!("query_id=test123&hash={}0", INVALID_HASH), BOT_TOKEN, None);
+        let result = validate(&format!("query_id=test123&hash={INVALID_HASH}0"), BOT_TOKEN, None);
         assert!(matches!(result, Err(InitDataError::HashInvalid)));
     }
 
@@ -262,7 +271,7 @@ mod tests {
         let base_data = "query_id=AAHdF6IQAAAAAN0XohDhrOrc&user=%7B%22id%22%3A279058397%2C%22first_name%22%3A%22Vladislav%22%2C%22last_name%22%3A%22Kibenko%22%2C%22username%22%3A%22vdkfrost%22%2C%22language_code%22%3A%22ru%22%2C%22is_premium%22%3Atrue%7D&auth_date=1662771648";
         // Use an obviously invalid hash (all zeros)
         let invalid_hash = "0000000000000000000000000000000000000000000000000000000000000000";
-        let init_data = format!("{}&hash={}", base_data, invalid_hash);
+        let init_data = format!("{base_data}&hash={invalid_hash}");
         let result = validate(&init_data, BOT_TOKEN, None);
         assert!(matches!(result, Err(InitDataError::HashInvalid)));
     }
