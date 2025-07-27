@@ -70,9 +70,6 @@ pub fn validate(init_data: &str, token: &str, expires_in: Option<u64>) -> Result
 
     let (base_data, hash) = extract_hash(init_data)?;
 
-    println!("base_data: {}", base_data);
-    println!("hash: {}", hash);
-
     let expected_hash = sign(&base_data, token)?;
 
     if hash != expected_hash {
