@@ -7,7 +7,20 @@ use crate::model::InitData;
 
 const STRING_PROPS: [&str; 1] = ["start_param"];
 
-/// Parse converts passed init data presented as query string to InitData object.
+/// Parse converts passed init data presented as query string to `InitData` object.
+///
+/// # Errors
+///
+/// This function returns an `Err` in one of the following cases:
+///
+/// - `auth_date` is missing
+/// - hash is missing
+/// - hash is invalid
+/// - init data has unexpected format
+/// - init data is expired
+/// - signature is missing
+/// - signature is invalid
+/// - the library has an internal error while hmac-ing the string. this should never happen
 pub fn parse(init_data: &str) -> Result<InitData, InitDataError> {
     if init_data.is_empty() {
         return Err(InitDataError::UnexpectedFormat("init_data is empty".to_string()));
@@ -30,9 +43,9 @@ pub fn parse(init_data: &str) -> Result<InitData, InitDataError> {
         .iter()
         .map(|(k, v)| {
             if !STRING_PROPS.contains(&k.as_str()) && serde_json::from_str::<Value>(v).is_ok() {
-                format!("\"{}\":{}", k, v)
+                format!("\"{k}\":{v}")
             } else {
-                format!("\"{}\":\"{}\"", k, v.replace('\"', "\\\""))
+                format!("\"{k}\":\"{}\"", v.replace('\"', "\\\""))
             }
         })
         .collect();
@@ -54,7 +67,7 @@ mod tests {
 
     #[test]
     fn test_parse_invalid_format() {
-        let result = parse(&format!("{};", PARSE_TEST_INIT_DATA));
+        let result = parse(&format!("{PARSE_TEST_INIT_DATA};"));
         assert!(matches!(result, Err(InitDataError::UnexpectedFormat(_))));
 
         assert!(matches!(parse("invalid"), Err(InitDataError::UnexpectedFormat(_))));
@@ -76,7 +89,7 @@ mod tests {
         if let Some(user) = result.user {
             assert_eq!(user.id, 6601562775);
             assert_eq!(user.first_name, ")");
-            assert_eq!(user.last_name, Some("".to_string()));
+            assert_eq!(user.last_name, Some(String::new()));
             assert_eq!(user.username, Some("trogloditik".to_string()));
             assert_eq!(user.language_code, Some("en".to_string()));
             assert_eq!(user.is_premium, None);

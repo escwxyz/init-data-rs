@@ -35,7 +35,7 @@ pub struct Chat {
 }
 
 /// This object contains data that is transferred to the Mini App when it is opened. It is empty if the Mini App was launched from a keyboard button or from inline mode.
-/// See: https://core.telegram.org/bots/webapps#webappinitdata
+/// See: <https://core.telegram.org/bots/webapps#webappinitdata>
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InitData {
     /// Unix time when the form was opened.
@@ -62,7 +62,7 @@ pub struct InitData {
     pub receiver: Option<User>,
     /// Optional.
     /// The value of the startattach parameter, passed via link. Only returned for Mini Apps when launched from the attachment menu via link.
-    /// The value of the start_param parameter will also be passed in the GET-parameter tgWebAppStartParam, so the Mini App can load the correct interface right away.
+    /// The value of the `start_param` parameter will also be passed in the GET-parameter tgWebAppStartParam, so the Mini App can load the correct interface right away.
     pub start_param: Option<String>,
     /// Optional. An object containing data about the current user.
     pub user: Option<User>,

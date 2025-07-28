@@ -13,9 +13,9 @@ const PROD_PUBLIC_KEY: &str = "e7bf03a2fa4602af4580703d88dda5bb59f32ed8b02a56c18
 /// Validates data for third-party use
 ///
 /// If you need to share the data with a third party, they can validate the data without requiring access to your bot's token.
-/// Simply provide them with the data from the Telegram.WebApp.initData field and your bot_id.
+/// Simply provide them with the data from the Telegram.WebApp.initData field and your `bot_id`.
 ///
-/// See: https://core.telegram.org/bots/webapps#validating-data-for-third-party-use
+/// See: <https://core.telegram.org/bots/webapps#validating-data-for-third-party-use>
 ///
 /// Telegram provides the following Ed25519 public keys for signature verification:
 /// * `40055058a4ee38156a06562e52eece92a771bcd8346a8c4615cb7376eddf72ec` for test environment
@@ -76,7 +76,7 @@ fn validate_third_party_with_signature(
         bot_id,
         filtered_pairs
             .iter()
-            .map(|(k, v)| format!("{}={}", k, v))
+            .map(|(k, v)| format!("{k}={v}"))
             .collect::<Vec<_>>()
             .join("\n")
     );
@@ -126,6 +126,10 @@ fn validate_third_party_with_signature(
 /// let init_data = "query_id=123&auth_date=1662771648&hash=...&signature=...";
 /// let result = validate_third_party(init_data, 1234567890, None);
 /// ```
+///
+/// # Errors
+///
+/// See `init_data_rs::parse` for possible errors
 pub fn validate_third_party(init_data: &str, bot_id: i64, expires_in: Option<u64>) -> Result<InitData, InitDataError> {
     validate_third_party_with_signature(init_data, bot_id, expires_in, false)
 }
@@ -140,7 +144,7 @@ mod tests {
     #[test]
     fn test_valid_third_party_signature() {
         let result = validate_third_party(VALID_INIT_DATA, BOT_ID, None);
-        assert!(result.is_ok(), "Expected Ok, got {:?}", result);
+        assert!(result.is_ok(), "Expected Ok, got {result:?}");
     }
 
     #[test]
@@ -176,7 +180,7 @@ mod tests {
     fn test_third_party_signature_verification_failure() {
         // Use a valid base64 signature, but one that doesn't match the data
         let bad_sig = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode([0u8; 64]);
-        let bad_data = format!("query_id=test&auth_date=123&signature={}&hash=abc", bad_sig);
+        let bad_data = format!("query_id=test&auth_date=123&signature={bad_sig}&hash=abc");
         let bot_id = 123456;
         let result = validate_third_party_with_signature(&bad_data, bot_id, None, true);
         assert!(matches!(result, Err(InitDataError::SignatureInvalid(_))));
