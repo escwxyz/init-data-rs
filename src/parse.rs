@@ -19,6 +19,12 @@ const STRING_PROPS: [&str; 1] = ["start_param"];
 /// - init data has unexpected format
 /// - signature is invalid
 /// - the library has an internal error while hmac-ing the string. this should never happen
+///
+/// # Panics
+///
+/// This function will panic if the hash field is missing from the parameters after
+/// the initial existence check. This should never happen in normal usage as the
+/// function returns an error before reaching the unwrap call.
 pub fn parse(init_data: &str) -> Result<InitData, InitDataError> {
     if init_data.is_empty() {
         return Err(InitDataError::UnexpectedFormat("init_data is empty".to_string()));
@@ -45,7 +51,8 @@ pub fn parse(init_data: &str) -> Result<InitData, InitDataError> {
         return Err(InitDataError::HashMissing);
     }
 
-    let hash = params.get("hash").unwrap();
+    // Validate hash format (should be a 64-character hex string)
+    let hash = params.get("hash").unwrap(); // Safe to unwrap since we checked existence above
     if hash.len() != 64 || !hash.chars().all(|c| c.is_ascii_hexdigit()) {
         return Err(InitDataError::HashInvalid);
     }
