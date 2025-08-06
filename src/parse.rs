@@ -17,8 +17,6 @@ const STRING_PROPS: [&str; 1] = ["start_param"];
 /// - hash is missing
 /// - hash is invalid
 /// - init data has unexpected format
-/// - init data is expired
-/// - signature is missing
 /// - signature is invalid
 /// - the library has an internal error while hmac-ing the string. this should never happen
 pub fn parse(init_data: &str) -> Result<InitData, InitDataError> {
@@ -37,6 +35,30 @@ pub fn parse(init_data: &str) -> Result<InitData, InitDataError> {
 
     for (key, value) in pairs {
         params.insert(key.to_string(), value.into_owned());
+    }
+
+    if !params.contains_key("auth_date") {
+        return Err(InitDataError::AuthDateMissing);
+    }
+
+    if !params.contains_key("hash") {
+        return Err(InitDataError::HashMissing);
+    }
+
+    let hash = params.get("hash").unwrap();
+    if hash.len() != 64 || !hash.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err(InitDataError::HashInvalid);
+    }
+
+    if let Some(signature) = params.get("signature") {
+        // Basic signature format validation (should be base64 URL-safe or hex)
+        // Allow base64 URL-safe characters (A-Z, a-z, 0-9, -, _) and standard base64 characters (+, /, =)
+        if !signature
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=' || c == '-' || c == '_')
+        {
+            return Err(InitDataError::SignatureInvalid("Invalid signature format".to_string()));
+        }
     }
 
     let json_pairs: Vec<String> = params
@@ -106,7 +128,7 @@ mod tests {
 
     #[test]
     fn test_parse_with_chat() {
-        let init_data = "chat=%7B%22id%22%3A-100123456789%2C%22type%22%3A%22supergroup%22%2C%22title%22%3A%22Test%20Group%22%7D&auth_date=1662771648&signature=abc&hash=abc";
+        let init_data = "chat=%7B%22id%22%3A-100123456789%2C%22type%22%3A%22supergroup%22%2C%22title%22%3A%22Test%20Group%22%7D&auth_date=1748683232&signature=abc&hash=c8fdc0e1608154171a77ef4ce838d114b0229d891ee55ac1ee566f14551433e8";
         let result = parse(init_data).unwrap();
 
         if let Some(chat) = result.chat {
@@ -120,8 +142,43 @@ mod tests {
 
     #[test]
     fn test_parse_start_param() {
-        let init_data = "start_param=test123&auth_date=1662771648&signature=abc&hash=abc";
+        let init_data = "start_param=test123&auth_date=1748683232&signature=abc&hash=c8fdc0e1608154171a77ef4ce838d114b0229d891ee55ac1ee566f14551433e8";
         let result = parse(init_data).unwrap();
         assert_eq!(result.start_param, Some("test123".to_string()));
+    }
+
+    #[test]
+    fn test_parse_missing_auth_date() {
+        let init_data = "hash=c8fdc0e1608154171a77ef4ce838d114b0229d891ee55ac1ee566f14551433e8";
+        let result = parse(init_data);
+        assert!(matches!(result, Err(InitDataError::AuthDateMissing)));
+    }
+
+    #[test]
+    fn test_parse_missing_hash() {
+        let init_data = "auth_date=1662771648";
+        let result = parse(init_data);
+        assert!(matches!(result, Err(InitDataError::HashMissing)));
+    }
+
+    #[test]
+    fn test_parse_invalid_hash() {
+        let init_data = "auth_date=1662771648&hash=invalid_hash";
+        let result = parse(init_data);
+        assert!(matches!(result, Err(InitDataError::HashInvalid)));
+    }
+
+    #[test]
+    fn test_parse_invalid_signature() {
+        let init_data = "auth_date=1662771648&hash=c8fdc0e1608154171a77ef4ce838d114b0229d891ee55ac1ee566f14551433e8&signature=invalid!signature";
+        let result = parse(init_data);
+        assert!(matches!(result, Err(InitDataError::SignatureInvalid(_))));
+    }
+
+    #[test]
+    fn test_parse_invalid_auth_date_format() {
+        let init_data = "auth_date=not_a_number&hash=c8fdc0e1608154171a77ef4ce838d114b0229d891ee55ac1ee566f14551433e8";
+        let result = parse(init_data);
+        assert!(matches!(result, Err(InitDataError::UnexpectedFormat(_))));
     }
 }
