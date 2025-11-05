@@ -1,6 +1,6 @@
 [package]
 name = "init-data-rs"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 description = "Telegram Mini Apps init data parser and validator for Rust"
 license = "MIT"
